@@ -46,6 +46,24 @@ const ServiceRecordDao = {
   getByCarIdAndDate(carId, date) {
     const records = this.listByCarId(carId);
     return records.find((record) => record.date === date) || null;
+  },
+
+  // Update service record data
+  update(recordId, recordData) {
+    const record = this.get(recordId);
+    if (!record) return null;
+    const updatedRecord = { ...record, ...recordData, id: record.id };
+    const filePath = path.join(STORAGE_PATH, `${recordId}.json`);
+    fs.writeFileSync(filePath, JSON.stringify(updatedRecord, null, 2));
+    return updatedRecord;
+  },
+
+  // Delete a service record by its ID
+  delete(recordId) {
+    const filePath = path.join(STORAGE_PATH, `${recordId}.json`);
+    if (!fs.existsSync(filePath)) return false;
+    fs.unlinkSync(filePath);
+    return true;
   }
 };
 

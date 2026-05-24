@@ -51,6 +51,24 @@ const CarDao = {
     const filePath = path.join(STORAGE_PATH, `${carId}.json`);
     fs.writeFileSync(filePath, JSON.stringify(car, null, 2));
     return car;
+  },
+
+  // Update car data
+  update(carId, carData) {
+    const car = this.get(carId);
+    if (!car) return null;
+    const updatedCar = { ...car, ...carData, id: car.id };
+    const filePath = path.join(STORAGE_PATH, `${carId}.json`);
+    fs.writeFileSync(filePath, JSON.stringify(updatedCar, null, 2));
+    return updatedCar;
+  },
+
+  // Delete a car by its ID
+  delete(carId) {
+    const filePath = path.join(STORAGE_PATH, `${carId}.json`);
+    if (!fs.existsSync(filePath)) return false;
+    fs.unlinkSync(filePath);
+    return true;
   }
 };
 

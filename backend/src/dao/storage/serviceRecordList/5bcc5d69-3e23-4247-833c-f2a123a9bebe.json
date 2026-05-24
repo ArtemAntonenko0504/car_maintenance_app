@@ -1,0 +1,9 @@
+{
+  "id": "5bcc5d69-3e23-4247-833c-f2a123a9bebe",
+  "serviceType": "Oil change",
+  "date": "2024-10-08T22:50:00.342Z",
+  "notes": "Replaced with 5W-40 oil",
+  "interval": 15000,
+  "mileage": 15000,
+  "carId": "8281fde2-038b-4c6a-80a6-05b6c1001331"
+}
