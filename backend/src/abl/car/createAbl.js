@@ -1,13 +1,30 @@
 const CarDao = require("../../dao/car-dao");
+const { validate } = require("../validator");
+
+// AJV schema for car/create input validation
+const schema = {
+  type: "object",
+  properties: {
+    brand: { type: "string", maxLength: 100 },
+    model: { type: "string", maxLength: 100 },
+    year: { type: "number" },
+    mileage: { type: "number" },
+    vin: { type: "string", maxLength: 17 }
+  },
+  required: ["brand", "model", "year", "mileage", "vin"],
+  additionalProperties: false
+};
 
 function createAbl(req, res) {
   const dtoIn = req.body;
 
-  // Input validation - check if all required fields are present
-  if (!dtoIn.brand || !dtoIn.model || !dtoIn.year || !dtoIn.mileage || !dtoIn.vin) {
+  // Validate dtoIn against schema
+  const validation = validate(schema, dtoIn);
+  if (!validation.valid) {
     return res.status(400).json({
       code: "dtoInIsNotValid",
-      message: "dtoIn is not valid"
+      message: "dtoIn is not valid",
+      errors: validation.errors
     });
   }
 

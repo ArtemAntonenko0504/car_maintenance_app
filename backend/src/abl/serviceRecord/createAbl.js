@@ -1,14 +1,32 @@
 const ServiceRecordDao = require("../../dao/serviceRecord-dao");
 const CarDao = require("../../dao/car-dao");
+const { validate } = require("../validator");
+
+// AJV schema for serviceRecord/create input validation
+const schema = {
+  type: "object",
+  properties: {
+    serviceType: { type: "string", maxLength: 150 },
+    date: { type: "string", format: "date-time" },
+    notes: { type: "string", maxLength: 250 },
+    interval: { type: "number" },
+    mileage: { type: "number" },
+    carId: { type: "string" }
+  },
+  required: ["serviceType", "date", "mileage", "carId"],
+  additionalProperties: false
+};
 
 function createAbl(req, res) {
   const dtoIn = req.body;
 
-  // Input validation - check if all required fields are present
-  if (!dtoIn.serviceType || !dtoIn.date || !dtoIn.mileage || !dtoIn.carId) {
+  // Validate dtoIn against schema
+  const validation = validate(schema, dtoIn);
+  if (!validation.valid) {
     return res.status(400).json({
       code: "dtoInIsNotValid",
-      message: "dtoIn is not valid"
+      message: "dtoIn is not valid",
+      errors: validation.errors
     });
   }
 
