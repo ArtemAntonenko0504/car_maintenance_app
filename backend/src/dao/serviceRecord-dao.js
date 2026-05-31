@@ -13,7 +13,8 @@ const ServiceRecordDao = {
       serviceType: recordData.serviceType,
       date: recordData.date,
       notes: recordData.notes,
-      interval: recordData.interval,
+      intervalKm: recordData.intervalKm,
+      intervalDays: recordData.intervalDays,
       mileage: recordData.mileage,
       carId: recordData.carId
     };

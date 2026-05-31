@@ -9,7 +9,8 @@ const schema = {
     serviceType: { type: "string", maxLength: 150 },
     date: { type: "string", format: "date-time" },
     notes: { type: "string", maxLength: 250 },
-    interval: { type: "number" },
+    intervalKm: { type: "number" },
+    intervalDays: { type: "number" },
     mileage: { type: "number" },
     carId: { type: "string" }
   },
@@ -54,15 +55,6 @@ function createAbl(req, res) {
     return res.status(400).json({
       code: "invalidMileage",
       message: "mileage must not be less than current car mileage"
-    });
-  }
-
-  // Check if service record with the same date already exists for this car
-  const existingRecord = ServiceRecordDao.getByCarIdAndDate(dtoIn.carId, dtoIn.date);
-  if (existingRecord) {
-    return res.status(400).json({
-      code: "serviceRecordAlreadyExists",
-      message: "service record with this date already exists for this car"
     });
   }
 

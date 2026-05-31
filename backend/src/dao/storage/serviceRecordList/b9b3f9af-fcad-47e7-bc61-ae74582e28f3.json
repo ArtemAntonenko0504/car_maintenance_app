@@ -1,0 +1,9 @@
+{
+  "id": "b9b3f9af-fcad-47e7-bc61-ae74582e28f3",
+  "serviceType": "Výměna pneumatik",
+  "date": "2026-05-31T00:00:00.000Z",
+  "intervalKm": 15000,
+  "intervalDays": 365,
+  "mileage": 50000,
+  "carId": "8281fde2-038b-4c6a-80a6-05b6c1001331"
+}

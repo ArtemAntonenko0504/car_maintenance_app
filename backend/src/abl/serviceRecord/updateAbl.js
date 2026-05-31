@@ -10,7 +10,8 @@ const schema = {
     serviceType: { type: "string", maxLength: 150 },
     date: { type: "string", format: "date-time" },
     notes: { type: "string", maxLength: 250 },
-    interval: { type: "number" },
+    intervalKm: { type: "number" },
+    intervalDays: { type: "number" },
     mileage: { type: "number" }
   },
   required: ["recordId"],

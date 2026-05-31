@@ -37,40 +37,42 @@ function maintenanceScheduleAbl(req, res) {
   // Load all service records for this car
   const records = ServiceRecordDao.listByCarId(dtoIn.carId);
 
-  // Filter only records that have an interval defined
+  // filter only records that have at least one interval defined
   const recordsWithInterval = records.filter(
-    (record) => record.interval !== null && record.interval !== undefined
+    (record) => record.intervalKm || record.intervalDays
   );
 
   // Calculate maintenance schedule for each record
   const scheduleList = recordsWithInterval.map((record) => {
-    const lastServiceDate = new Date(record.date);
+    const result = {};
+    result.serviceType = record.serviceType;
+    result.lastServiceDate = record.date;
+    result.currentMileage = car.mileage;
 
-    // Calculate next maintenance date based on interval in days
-    const nextMaintenanceDate = new Date(lastServiceDate);
-    nextMaintenanceDate.setDate(nextMaintenanceDate.getDate() + record.interval);
+    // calculate by km if intervalKm is set
+    if (record.intervalKm) {
+      result.nextMileage = record.mileage + record.intervalKm;
+      result.remainingKm = result.nextMileage - car.mileage;
+    }
 
-    // Calculate remaining days until next maintenance
-    const today = new Date();
-    const remainingDays = Math.ceil(
-      (nextMaintenanceDate - today) / (1000 * 60 * 60 * 24)
-    );
+    // calculate by days if intervalDays is set
+    if (record.intervalDays) {
+      const lastServiceDate = new Date(record.date);
+      const nextMaintenanceDate = new Date(lastServiceDate);
+      nextMaintenanceDate.setDate(nextMaintenanceDate.getDate() + record.intervalDays);
+      result.nextMaintenanceDate = nextMaintenanceDate.toISOString();
+      const today = new Date();
+      result.remainingDays = Math.ceil(
+        (nextMaintenanceDate - today) / (1000 * 60 * 60 * 24)
+      );
+    }
 
-    // Calculate remaining km until next maintenance
-    const remainingKm = record.mileage + record.interval - car.mileage;
+    // mark as urgent if less than 14 days or less than 1000 km remaining
+    result.isUrgent =
+      (result.remainingDays !== undefined && result.remainingDays <= 14) ||
+      (result.remainingKm !== undefined && result.remainingKm <= 1000);
 
-    // Mark as urgent if less than 14 days or less than 1000 km remaining
-    const isUrgent = remainingDays <= 14 || remainingKm <= 1000;
-
-    return {
-      serviceType: record.serviceType,
-      lastServiceDate: record.date,
-      currentMileage: car.mileage,
-      nextMaintenanceDate: nextMaintenanceDate.toISOString(),
-      remainingDays: remainingDays,
-      remainingKm: remainingKm,
-      isUrgent: isUrgent
-    };
+    return result;
   });
 
   // Sort by urgency - most urgent first
