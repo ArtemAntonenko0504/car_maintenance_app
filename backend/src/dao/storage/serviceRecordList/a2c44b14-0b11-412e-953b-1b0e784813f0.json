@@ -1,9 +1,0 @@
-{
-  "id": "a2c44b14-0b11-412e-953b-1b0e784813f0",
-  "serviceType": "Technická kontrola",
-  "date": "2026-05-31T00:00:00.000Z",
-  "intervalKm": 15000,
-  "intervalDays": 365,
-  "mileage": 20000,
-  "carId": "29deba9c-a3a4-41b6-b0d8-64b3cde0c9c6"
-}

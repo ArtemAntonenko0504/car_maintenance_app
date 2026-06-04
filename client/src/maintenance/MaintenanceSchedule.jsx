@@ -11,7 +11,6 @@ function MaintenanceSchedule() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // load all cars and their maintenance schedules when page opens
   useEffect(() => {
     loadSchedule();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -20,7 +19,6 @@ function MaintenanceSchedule() {
   async function loadSchedule() {
     setLoading(true);
 
-    // first load all cars
     const carsResult = await FetchHelper.car.list();
     if (!carsResult.ok) {
       setError("Nepodařilo se načíst vozidla.");
@@ -31,7 +29,6 @@ function MaintenanceSchedule() {
     const cars = carsResult.data.itemList;
     setCarList(cars);
 
-    // then load maintenance schedule for each car
     const schedules = {};
     for (const car of cars) {
       const result = await FetchHelper.serviceRecord.maintenanceSchedule({
@@ -46,26 +43,73 @@ function MaintenanceSchedule() {
     setLoading(false);
   }
 
-  // decide badge color based on remaining days and km
-  function getBadgeClass(item) {
-    if (item.isUrgent) return "badge badge-urgent";
-    if (item.remainingDays <= 30 || item.remainingKm <= 3000)
-      return "badge badge-warning";
+  // badge for km - color based on remaining km
+  function getKmBadgeClass(item) {
+    if (item.remainingKm === undefined) return null;
+    if (item.remainingKm <= 1000) return "badge badge-urgent";
+    if (item.remainingKm <= 3000) return "badge badge-warning";
     return "badge badge-ok";
   }
 
-  // format remaining days text
-  function getRemainingText(item) {
+  // badge for days - color based on remaining days
+  function getDaysBadgeClass(item) {
+    if (item.remainingDays === undefined) return null;
+    if (item.remainingDays <= 14) return "badge badge-urgent";
+    if (item.remainingDays <= 30) return "badge badge-warning";
+    return "badge badge-ok";
+  }
+
+  // badge text for days
+  function getDaysBadgeText(item) {
+    if (item.remainingDays === undefined) return null;
+    if (item.remainingDays < 0) return "Po termínu!";
+    if (item.remainingDays === 0) return "Dnes!";
+    return `${item.remainingDays} dní`;
+  }
+
+  // badge text for km
+  function getKmBadgeText(item) {
+    if (item.remainingKm === undefined) return null;
+    if (item.remainingKm <= 0) return "Po termínu!";
+    return `${item.remainingKm.toLocaleString()} km`;
+  }
+
+  // progress bar percentage - based on whichever is more critical
+  function getProgressPercent(item) {
+    let kmPercent = null;
+    let daysPercent = null;
+
+    if (item.remainingKm !== undefined && item.nextMileage) {
+      kmPercent = Math.min(100, Math.max(0,
+        (item.currentMileage / item.nextMileage) * 100
+      ));
+    }
+
     if (item.remainingDays !== undefined) {
-      if (item.remainingDays < 0) return "Po termínu!";
-      if (item.remainingDays === 0) return "Dnes!";
-      return `${item.remainingDays} dní`;
+      const totalDays = item.remainingDays + 
+        Math.ceil((new Date() - new Date(item.lastServiceDate)) / (1000 * 60 * 60 * 24));
+      daysPercent = Math.min(100, Math.max(0,
+        ((totalDays - item.remainingDays) / totalDays) * 100
+      ));
     }
-    if (item.remainingKm !== undefined) {
-      if (item.remainingKm <= 0) return "Po termínu!";
-      return `${item.remainingKm.toLocaleString()} km`;
+
+    // return whichever is higher (more critical)
+    if (kmPercent !== null && daysPercent !== null) {
+      return Math.max(kmPercent, daysPercent);
     }
-    return "";
+    return kmPercent ?? daysPercent ?? 0;
+  }
+
+  // progress bar color - based on whichever is more critical
+  function getProgressColor(item) {
+    const kmUrgent = item.remainingKm !== undefined && item.remainingKm <= 1000;
+    const daysUrgent = item.remainingDays !== undefined && item.remainingDays <= 14;
+    const kmWarning = item.remainingKm !== undefined && item.remainingKm <= 3000;
+    const daysWarning = item.remainingDays !== undefined && item.remainingDays <= 30;
+
+    if (kmUrgent || daysUrgent) return "#dc2626";
+    if (kmWarning || daysWarning) return "#d97706";
+    return "#2563eb";
   }
 
   if (loading) return <Loading />;
@@ -77,7 +121,6 @@ function MaintenanceSchedule() {
         <h1 className="page-title">Přehled údržby</h1>
       </div>
 
-      {/* empty state when no cars */}
       {carList.length === 0 && (
         <div className="empty-state">
           <Icon path={mdiBell} size={3} color="#ccc" />
@@ -86,7 +129,6 @@ function MaintenanceSchedule() {
         </div>
       )}
 
-      {/* schedule for each car */}
       {carList.map((car) => (
         <div key={car.id} style={{ marginBottom: "28px" }}>
           {/* car header */}
@@ -107,7 +149,7 @@ function MaintenanceSchedule() {
             </div>
           </div>
 
-          {/* maintenance items for this car */}
+          {/* schedule items */}
           {!scheduleData[car.id] || scheduleData[car.id].length === 0 ? (
             <div className="empty-state" style={{ padding: "20px" }}>
               <p>Žádné naplánované údržby — přidejte servisní záznamy s intervalem.</p>
@@ -123,42 +165,59 @@ function MaintenanceSchedule() {
 
                   {/* info */}
                   <div className="schedule-item-info">
+                    {/* title and badges */}
                     <div className="schedule-item-header">
                       <h3 className="service-record-title">
                         {item.serviceType}
                       </h3>
-                      <span className={getBadgeClass(item)}>
-                        {getRemainingText(item)}
-                      </span>
+                      <div style={{ display: "flex", gap: "6px" }}>
+                        {getKmBadgeClass(item) && (
+                          <span className={getKmBadgeClass(item)}>
+                            {getKmBadgeText(item)}
+                          </span>
+                        )}
+                        {getDaysBadgeClass(item) && (
+                          <span className={getDaysBadgeClass(item)}>
+                            {getDaysBadgeText(item)}
+                          </span>
+                        )}
+                      </div>
                     </div>
 
+                    {/* interval info */}
                     <p className="service-record-meta">
-                      {item.remainingKm !== undefined && (
+                      {item.intervalKm && (
                         <>
                           <Icon path={mdiSpeedometer} size={0.6} />
-                          zbývá {item.remainingKm.toLocaleString()} km
-                          &nbsp;•&nbsp;
+                          každých {item.intervalKm.toLocaleString()} km
                         </>
                       )}
-                      {item.remainingDays !== undefined && (
+                      {item.intervalKm && item.intervalDays && (
+                        <>&nbsp;•&nbsp;</>
+                      )}
+                      {item.intervalDays && (
                         <>
                           <Icon path={mdiCalendar} size={0.6} />
-                          při {new Date(item.nextMaintenanceDate).toLocaleDateString("cs-CZ")}
-                          &nbsp;({item.remainingDays} dní)
+                          každých {item.intervalDays} dní
                         </>
                       )}
                     </p>
+
+                    {/* next maintenance date */}
+                    {item.nextMaintenanceDate && (
+                      <p className="service-record-meta">
+                        <Icon path={mdiCalendar} size={0.6} />
+                        příští údržba: {new Date(item.nextMaintenanceDate).toLocaleDateString("cs-CZ")}
+                      </p>
+                    )}
 
                     {/* progress bar */}
                     <div className="progress-bar-container">
                       <div
                         className="progress-bar"
                         style={{
-                          width: `${Math.min(
-                            100,
-                            Math.max(0, 100 - (item.remainingKm / item.currentMileage) * 100)
-                          )}%`,
-                          backgroundColor: item.isUrgent ? "#dc2626" : "#2563EB",
+                          width: `${getProgressPercent(item)}%`,
+                          backgroundColor: getProgressColor(item),
                         }}
                       />
                     </div>

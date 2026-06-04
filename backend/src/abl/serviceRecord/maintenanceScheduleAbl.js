@@ -48,6 +48,11 @@ function maintenanceScheduleAbl(req, res) {
     result.serviceType = record.serviceType;
     result.lastServiceDate = record.date;
     result.currentMileage = car.mileage;
+    result.intervalKm = record.intervalKm;
+    result.intervalDays = record.intervalDays;
+    if (record.intervalKm) {
+      result.nextMileage = record.mileage + record.intervalKm;
+    }
 
     // calculate by km if intervalKm is set
     if (record.intervalKm) {

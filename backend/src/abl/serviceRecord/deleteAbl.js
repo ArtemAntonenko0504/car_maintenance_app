@@ -1,7 +1,7 @@
 const ServiceRecordDao = require("../../dao/serviceRecord-dao");
+const CarDao = require("../../dao/car-dao");
 const { validate } = require("../validator");
 
-// AJV schema for serviceRecord/delete input validation
 const schema = {
   type: "object",
   properties: {
@@ -14,7 +14,6 @@ const schema = {
 function deleteAbl(req, res) {
   const dtoIn = req.query;
 
-  // Validate dtoIn against schema
   const validation = validate(schema, dtoIn);
   if (!validation.valid) {
     return res.status(400).json({
@@ -24,7 +23,7 @@ function deleteAbl(req, res) {
     });
   }
 
-  // Check if service record exists
+  // check if service record exists
   const record = ServiceRecordDao.get(dtoIn.recordId);
   if (!record) {
     return res.status(404).json({
@@ -33,8 +32,17 @@ function deleteAbl(req, res) {
     });
   }
 
-  // Delete the service record
+  // delete the service record
   ServiceRecordDao.delete(dtoIn.recordId);
+
+  // find the latest remaining service record for this car
+  const remainingRecords = ServiceRecordDao.listByCarId(record.carId);
+
+  if (remainingRecords.length > 0) {
+    // update car mileage to the latest remaining record mileage
+    const latestRecord = remainingRecords[0];
+    CarDao.updateMileage(record.carId, latestRecord.mileage);
+  }
 
   return res.status(200).json({
     message: "service record deleted successfully"

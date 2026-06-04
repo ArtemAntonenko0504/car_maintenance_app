@@ -1,0 +1,11 @@
+{
+  "id": "f75f83ae-81fa-4eb4-bc0e-4cac8c7f9cf5",
+  "serviceType": "Kontrola brzd",
+  "date": "2026-06-01T00:00:00.000Z",
+  "notes": "asdjlaksjdlaks",
+  "intervalKm": 5000,
+  "intervalDays": 365,
+  "mileage": 30000,
+  "carId": "29deba9c-a3a4-41b6-b0d8-64b3cde0c9c6",
+  "recordId": "f75f83ae-81fa-4eb4-bc0e-4cac8c7f9cf5"
+}

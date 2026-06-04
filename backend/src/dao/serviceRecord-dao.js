@@ -33,7 +33,12 @@ const ServiceRecordDao = {
     // Filter records by carId and sort by date from newest to oldest
     return records
       .filter((record) => record.carId === carId)
-      .sort((a, b) => new Date(b.date) - new Date(a.date));
+      .sort((a, b) => {
+        const dateDiff = new Date(b.date) - new Date(a.date);
+        // if dates are equal - sort by id to keep newest on top
+        if (dateDiff === 0) return b.id.localeCompare(a.id);
+        return dateDiff;
+      });
   },
 
   // Return a single service record by its ID

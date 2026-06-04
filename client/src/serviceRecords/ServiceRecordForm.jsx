@@ -110,6 +110,8 @@ function ServiceRecordForm({ carId, record, onSave, onClose }) {
             className="form-input"
             value={serviceType}
             onChange={(e) => setServiceType(e.target.value)}
+            disabled={isEditing}
+            style={isEditing ? { backgroundColor: "#f1f5f9", cursor: "not-allowed" } : {}}
           >
             <option value="">Vyberte typ servisu</option>
             {SERVICE_TYPES.map((type) => (
@@ -118,9 +120,6 @@ function ServiceRecordForm({ carId, record, onSave, onClose }) {
               </option>
             ))}
           </select>
-          {errors.serviceType && (
-            <p className="form-error">{errors.serviceType}</p>
-          )}
         </div>
 
         <div className="form-group">
@@ -130,8 +129,9 @@ function ServiceRecordForm({ carId, record, onSave, onClose }) {
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
+            disabled={isEditing}
+            style={isEditing ? { backgroundColor: "#f1f5f9", cursor: "not-allowed" } : {}}
           />
-          {errors.date && <p className="form-error">{errors.date}</p>}
         </div>
 
         <div className="form-group">
@@ -141,9 +141,10 @@ function ServiceRecordForm({ carId, record, onSave, onClose }) {
             type="number"
             value={mileage}
             onChange={(e) => setMileage(e.target.value)}
+            disabled={isEditing}
+            style={isEditing ? { backgroundColor: "#f1f5f9", cursor: "not-allowed" } : {}}
             placeholder="např. 15000"
           />
-          {errors.mileage && <p className="form-error">{errors.mileage}</p>}
         </div>
 
         <div className="form-group">
