@@ -1,8 +1,6 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Icon from "@mdi/react";
 import { mdiArrowLeft, mdiPlus, mdiCar, mdiSpeedometer } from "@mdi/js";
-import FetchHelper from "../fetch-helper";
 import Loading from "../common/Loading";
 import ErrorMessage from "../common/Error";
 import Notification from "../common/Notification";
@@ -10,97 +8,36 @@ import ServiceRecordForm from "../serviceRecords/ServiceRecordForm";
 import ServiceRecordDeleteDialog from "../serviceRecords/ServiceRecordDeleteDialog";
 import ServiceRecordList from "../serviceRecords/ServiceRecordList";
 import CarForm from "./CarForm";
+import CarDetailProvider, { useCarDetail } from "./car-detail-provider";
 
-function CarDetail() {
-  // get carId from URL - e.g. /car/8281fde2
-  const { carId } = useParams();
+// this component uses data from context
+function CarDetailContent() {
   const navigate = useNavigate();
-
-  const [car, setCar] = useState(null);
-  const [serviceRecords, setServiceRecords] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  // controls for modals
-  const [showServiceForm, setShowServiceForm] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showEditCarForm, setShowEditCarForm] = useState(false);
-  const [showMileageUpdate, setShowMileageUpdate] = useState(false);
-
-  // selected service record for edit or delete
-  const [selectedRecord, setSelectedRecord] = useState(null);
-
-  // new mileage value for banner update
-  const [newMileage, setNewMileage] = useState("");
-
-  const [notification, setNotification] = useState(null);
-
-  // load car and service records when page opens
-  useEffect(() => {
-    loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [carId]);
-
-  async function loadData() {
-    setLoading(true);
-
-    // load car data
-    const carResult = await FetchHelper.car.get({ carId });
-    if (!carResult.ok) {
-      setError("Vozidlo nebylo nalezeno.");
-      setLoading(false);
-      return;
-    }
-    setCar(carResult.data);
-
-    // load service records for this car
-    const recordsResult = await FetchHelper.serviceRecord.list({ carId });
-    if (recordsResult.ok) {
-      setServiceRecords(recordsResult.data.itemList);
-    }
-
-    setLoading(false);
-  }
-
-  // called after service record is saved
-  function handleRecordSaved(message) {
-    setShowServiceForm(false);
-    setSelectedRecord(null);
-    setNotification({ message, type: "success" });
-    loadData();
-  }
-
-  // called after service record is deleted
-  function handleRecordDeleted() {
-    setShowDeleteDialog(false);
-    setSelectedRecord(null);
-    setNotification({ message: "Záznam byl smazán.", type: "success" });
-    loadData();
-  }
-
-  // called after car is updated
-  function handleCarSaved(message) {
-    setShowEditCarForm(false);
-    setNotification({ message, type: "success" });
-    loadData();
-  }
-
-  // update mileage from banner
-  async function handleMileageUpdate() {
-    if (!newMileage) return;
-    const result = await FetchHelper.car.update({
-      carId,
-      mileage: Number(newMileage),
-    });
-    if (result.ok) {
-      setShowMileageUpdate(false);
-      setNewMileage("");
-      setNotification({ message: "Kilometráž byla aktualizována.", type: "success" });
-      loadData();
-    } else {
-      setNotification({ message: result.data.message, type: "error" });
-    }
-  }
+  const {
+    car,
+    carId,
+    serviceRecords,
+    loading,
+    error,
+    notification,
+    setNotification,
+    showServiceForm,
+    setShowServiceForm,
+    showDeleteDialog,
+    setShowDeleteDialog,
+    showEditCarForm,
+    setShowEditCarForm,
+    showMileageUpdate,
+    setShowMileageUpdate,
+    selectedRecord,
+    setSelectedRecord,
+    newMileage,
+    setNewMileage,
+    handleRecordSaved,
+    handleRecordDeleted,
+    handleCarSaved,
+    handleMileageUpdate,
+  } = useCarDetail();
 
   if (loading) return <Loading />;
   if (error) return <ErrorMessage message={error} />;
@@ -241,6 +178,15 @@ function CarDetail() {
         />
       )}
     </div>
+  );
+}
+
+// CarDetail wraps content with provider
+function CarDetail() {
+  return (
+    <CarDetailProvider>
+      <CarDetailContent />
+    </CarDetailProvider>
   );
 }
 

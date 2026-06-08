@@ -1,84 +1,31 @@
-import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Icon from "@mdi/react";
 import { mdiPlus, mdiCar, mdiSpeedometer } from "@mdi/js";
-import FetchHelper from "../fetch-helper";
 import Loading from "../common/Loading";
 import ErrorMessage from "../common/Error";
 import Notification from "../common/Notification";
 import CarForm from "./CarForm";
 import CarDeleteDialog from "./CarDeleteDialog";
+import CarListProvider, { useCarList } from "./car-list-provider";
 
-function CarList() {
-  // list of all cars from server
-  const [carList, setCarList] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  // controls for showing/hiding modals
-  const [showCarForm, setShowCarForm] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-
-  // which car is selected for edit or delete
-  const [selectedCar, setSelectedCar] = useState(null);
-
-  // notification message after action
-  const [notification, setNotification] = useState(null);
-
+// this component uses data from context
+function CarListContent() {
   const navigate = useNavigate();
-
-  // load all cars when page opens
-  useEffect(() => {
-    loadCars();
-  }, []);
-
-  async function loadCars() {
-    setLoading(true);
-    const result = await FetchHelper.car.list();
-    if (result.ok) {
-      setCarList(result.data.itemList);
-    } else {
-      setError("Nepodařilo se načíst vozidla.");
-    }
-    setLoading(false);
-  }
-
-  // open form for adding new car
-  function handleAddCar() {
-    setSelectedCar(null);
-    setShowCarForm(true);
-  }
-
-  // open form for editing existing car
-  function handleEditCar(e, car) {
-    e.stopPropagation(); // prevent navigating to car detail
-    setSelectedCar(car);
-    setShowCarForm(true);
-  }
-
-  // open delete confirmation dialog
-  function handleDeleteCar(e, car) {
-    e.stopPropagation(); // prevent navigating to car detail
-    setSelectedCar(car);
-    setShowDeleteDialog(true);
-  }
-
-  // called after car is successfully created or updated
-  function handleCarSaved(message) {
-    setShowCarForm(false);
-    setNotification({ message, type: "success" });
-    loadCars();
-  }
-
-  // called after car is successfully deleted
-  function handleCarDeleted() {
-    setShowDeleteDialog(false);
-    setShowCarForm(false); // close edit form too if it was open
-    setSelectedCar(null);
-    setNotification({ message: "Vozidlo bylo smazáno.", type: "success" });
-    loadCars();
-  }
-
+  const {
+    carList,
+    loading,
+    error,
+    notification,
+    setNotification,
+    showCarForm,
+    showDeleteDialog,
+    selectedCar,
+    handleAddCar,
+    handleEditCar,
+    handleDeleteCar,
+    handleCarSaved,
+    handleCarDeleted,
+  } = useCarList();
 
   if (loading) return <Loading />;
   if (error) return <ErrorMessage message={error} />;
@@ -144,25 +91,24 @@ function CarList() {
         </div>
       ))}
 
-      {/* modal for adding/editing car */}
+      {/* modals */}
       {showCarForm && (
         <CarForm
           car={selectedCar}
           onSave={handleCarSaved}
-          onClose={() => setShowCarForm(false)}
+          onClose={() => setNotification(null)}
         />
       )}
 
-      {/* modal for delete confirmation */}
       {showDeleteDialog && (
         <CarDeleteDialog
           car={selectedCar}
           onDelete={handleCarDeleted}
-          onClose={() => setShowDeleteDialog(false)}
+          onClose={() => setNotification(null)}
         />
       )}
 
-      {/* notification after action */}
+      {/* notification */}
       {notification && (
         <Notification
           message={notification.message}
@@ -171,6 +117,15 @@ function CarList() {
         />
       )}
     </div>
+  );
+}
+
+// CarList wraps content with provider
+function CarList() {
+  return (
+    <CarListProvider>
+      <CarListContent />
+    </CarListProvider>
   );
 }
 
