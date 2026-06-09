@@ -1,49 +1,14 @@
-import { useState, useEffect } from "react";
 import Icon from "@mdi/react";
 import { mdiBell, mdiCar, mdiSpeedometer, mdiCalendar, mdiWrench } from "@mdi/js";
-import FetchHelper from "../fetch-helper";
 import Loading from "../common/Loading";
 import ErrorMessage from "../common/Error";
+import MaintenanceScheduleProvider, { useMaintenanceSchedule } from "./maintenance-schedule-provider";
 
-function MaintenanceSchedule() {
-  const [carList, setCarList] = useState([]);
-  const [scheduleData, setScheduleData] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+// this component uses data from context
+function MaintenanceScheduleContent() {
+  const { carList, scheduleData, loading, error } = useMaintenanceSchedule();
 
-  useEffect(() => {
-    loadSchedule();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  async function loadSchedule() {
-    setLoading(true);
-
-    const carsResult = await FetchHelper.car.list();
-    if (!carsResult.ok) {
-      setError("Nepodařilo se načíst vozidla.");
-      setLoading(false);
-      return;
-    }
-
-    const cars = carsResult.data.itemList;
-    setCarList(cars);
-
-    const schedules = {};
-    for (const car of cars) {
-      const result = await FetchHelper.serviceRecord.maintenanceSchedule({
-        carId: car.id,
-      });
-      if (result.ok) {
-        schedules[car.id] = result.data.itemList;
-      }
-    }
-
-    setScheduleData(schedules);
-    setLoading(false);
-  }
-
-  // badge for km - color based on remaining km
+  // badge color based on remaining km
   function getKmBadgeClass(item) {
     if (item.remainingKm === undefined) return null;
     if (item.remainingKm <= 1000) return "badge badge-urgent";
@@ -51,7 +16,7 @@ function MaintenanceSchedule() {
     return "badge badge-ok";
   }
 
-  // badge for days - color based on remaining days
+  // badge color based on remaining days
   function getDaysBadgeClass(item) {
     if (item.remainingDays === undefined) return null;
     if (item.remainingDays <= 14) return "badge badge-urgent";
@@ -74,7 +39,7 @@ function MaintenanceSchedule() {
     return `${item.remainingKm.toLocaleString()} km`;
   }
 
-  // progress bar percentage - based on whichever is more critical
+  // progress bar percentage based on whichever is more critical
   function getProgressPercent(item) {
     let kmPercent = null;
     let daysPercent = null;
@@ -86,21 +51,20 @@ function MaintenanceSchedule() {
     }
 
     if (item.remainingDays !== undefined) {
-      const totalDays = item.remainingDays + 
+      const totalDays = item.remainingDays +
         Math.ceil((new Date() - new Date(item.lastServiceDate)) / (1000 * 60 * 60 * 24));
       daysPercent = Math.min(100, Math.max(0,
         ((totalDays - item.remainingDays) / totalDays) * 100
       ));
     }
 
-    // return whichever is higher (more critical)
     if (kmPercent !== null && daysPercent !== null) {
       return Math.max(kmPercent, daysPercent);
     }
     return kmPercent ?? daysPercent ?? 0;
   }
 
-  // progress bar color - based on whichever is more critical
+  // progress bar color based on whichever is more critical
   function getProgressColor(item) {
     const kmUrgent = item.remainingKm !== undefined && item.remainingKm <= 1000;
     const daysUrgent = item.remainingDays !== undefined && item.remainingDays <= 14;
@@ -121,6 +85,7 @@ function MaintenanceSchedule() {
         <h1 className="page-title">Přehled údržby</h1>
       </div>
 
+      {/* empty state when no cars */}
       {carList.length === 0 && (
         <div className="empty-state">
           <Icon path={mdiBell} size={3} color="#ccc" />
@@ -129,6 +94,7 @@ function MaintenanceSchedule() {
         </div>
       )}
 
+      {/* schedule for each car */}
       {carList.map((car) => (
         <div key={car.id} style={{ marginBottom: "28px" }}>
           {/* car header */}
@@ -149,7 +115,7 @@ function MaintenanceSchedule() {
             </div>
           </div>
 
-          {/* schedule items */}
+          {/* maintenance items for this car */}
           {!scheduleData[car.id] || scheduleData[car.id].length === 0 ? (
             <div className="empty-state" style={{ padding: "20px" }}>
               <p>Žádné naplánované údržby — přidejte servisní záznamy s intervalem.</p>
@@ -229,6 +195,15 @@ function MaintenanceSchedule() {
         </div>
       ))}
     </div>
+  );
+}
+
+// MaintenanceSchedule wraps content with provider
+function MaintenanceSchedule() {
+  return (
+    <MaintenanceScheduleProvider>
+      <MaintenanceScheduleContent />
+    </MaintenanceScheduleProvider>
   );
 }
 
