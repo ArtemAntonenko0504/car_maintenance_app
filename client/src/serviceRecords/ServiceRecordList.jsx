@@ -1,11 +1,27 @@
 import Icon from "@mdi/react";
-import { mdiWrench, mdiCalendar, mdiSpeedometer } from "@mdi/js";
+import { 
+  mdiWrench, 
+  mdiOilLevel, 
+  mdiCarBrakeAlert,
+  mdiAirFilter, 
+  mdiSnowflake, 
+  mdiTire, 
+  mdiClipboardCheck, 
+  mdiAutoFix, 
+  mdiCalendar, 
+  mdiSpeedometer,
+ } from "@mdi/js";
 
 // icons for different service types
 const serviceIcons = {
-  "Výměna oleje": mdiWrench,
-  "Kontrola brzd": mdiWrench,
-  "Výměna vzduchového filtru": mdiWrench,
+  "Výměna oleje": mdiOilLevel,
+  "Kontrola brzd": mdiCarBrakeAlert,
+  "Výměna vzduchového filtru": mdiAirFilter,
+  "Výměna zapalovacích svíček": mdiAutoFix,
+  "Kontrola klimatizace": mdiSnowflake,
+  "Výměna pneumatik": mdiTire,
+  "Technická kontrola": mdiClipboardCheck,
+  "Jiný servis": mdiWrench,
 };
 
 function ServiceRecordList({ serviceRecords, onEdit, onDelete }) {

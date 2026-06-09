@@ -27,7 +27,21 @@ function CarListProvider({ children }) {
     setLoading(true);
     const result = await FetchHelper.car.list();
     if (result.ok) {
-      setCarList(result.data.itemList);
+      // for each car load number of service records
+      const carsWithCount = await Promise.all(
+        result.data.itemList.map(async (car) => {
+          const recordsResult = await FetchHelper.serviceRecord.list({
+            carId: car.id,
+          });
+          return {
+            ...car,
+            serviceRecordCount: recordsResult.ok
+              ? recordsResult.data.itemList.length
+              : 0,
+          };
+        })
+      );
+      setCarList(carsWithCount);
     } else {
       setError("Nepodařilo se načíst vozidla.");
     }

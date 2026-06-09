@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import Icon from "@mdi/react";
-import { mdiPlus, mdiCar, mdiSpeedometer } from "@mdi/js";
+import { mdiPlus, mdiCar, mdiSpeedometer, mdiClipboardList } from "@mdi/js";
 import Loading from "../common/Loading";
 import ErrorMessage from "../common/Error";
 import Notification from "../common/Notification";
@@ -67,6 +67,11 @@ function CarListContent() {
               </h2>
               <p className="car-card-subtitle">
                 {car.year} • VIN: {car.vin}
+              </p>
+              <p className="car-card-subtitle">
+                <Icon path={mdiClipboardList} size={0.7} />
+                {car.serviceRecordCount} {car.serviceRecordCount === 1 ? "záznam" : 
+                car.serviceRecordCount >= 2 && car.serviceRecordCount <= 4 ? "záznamy" : "záznamů"}
               </p>
               <p className="car-card-mileage">
                 <Icon path={mdiSpeedometer} size={0.7} />
