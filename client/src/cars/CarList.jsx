@@ -17,6 +17,8 @@ function CarListContent() {
     error,
     notification,
     setNotification,
+    setShowCarForm,
+    setShowDeleteDialog,
     showCarForm,
     showDeleteDialog,
     selectedCar,
@@ -101,7 +103,7 @@ function CarListContent() {
         <CarForm
           car={selectedCar}
           onSave={handleCarSaved}
-          onClose={() => setNotification(null)}
+          onClose={() => setShowCarForm(false)}
         />
       )}
 
@@ -109,7 +111,7 @@ function CarListContent() {
         <CarDeleteDialog
           car={selectedCar}
           onDelete={handleCarDeleted}
-          onClose={() => setNotification(null)}
+          onClose={() => setShowDeleteDialog(false)}
         />
       )}
 
