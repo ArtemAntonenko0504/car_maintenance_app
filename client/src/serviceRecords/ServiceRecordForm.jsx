@@ -41,7 +41,9 @@ function ServiceRecordForm({ carId, record, onSave, onClose }) {
     const newErrors = {};
     if (!serviceType) newErrors.serviceType = "Vyberte typ servisu.";
     if (!date) newErrors.date = "Zadejte datum.";
-    if (!mileage && mileage !== 0) newErrors.mileage = "Zadejte stav kilometrů.";
+    if (mileage === "" || mileage === null || mileage === undefined) {
+      newErrors.mileage = "Zadejte stav kilometrů.";
+    }
     return newErrors;
   }
 
@@ -57,7 +59,7 @@ function ServiceRecordForm({ carId, record, onSave, onClose }) {
     // convert date to ISO format that backend expects
     const dtoIn = {
       serviceType,
-      date: new Date(date).toISOString(),
+      date: new Date(date + "T12:00:00").toISOString(),
       notes: notes || undefined,
       intervalKm: intervalKm ? Number(intervalKm) : undefined,
       intervalDays: intervalDays ? Number(intervalDays) : undefined,
@@ -120,6 +122,7 @@ function ServiceRecordForm({ carId, record, onSave, onClose }) {
               </option>
             ))}
           </select>
+          {errors.serviceType && <p className="form-error">{errors.serviceType}</p>}
         </div>
 
         <div className="form-group">
@@ -129,9 +132,8 @@ function ServiceRecordForm({ carId, record, onSave, onClose }) {
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            disabled={isEditing}
-            style={isEditing ? { backgroundColor: "#f1f5f9", cursor: "not-allowed" } : {}}
           />
+          {errors.date && <p className="form-error">{errors.date}</p>}
         </div>
 
         <div className="form-group">
@@ -145,6 +147,7 @@ function ServiceRecordForm({ carId, record, onSave, onClose }) {
             style={isEditing ? { backgroundColor: "#f1f5f9", cursor: "not-allowed" } : {}}
             placeholder="např. 15000"
           />
+          {errors.mileage && <p className="form-error">{errors.mileage}</p>}
         </div>
 
         <div className="form-group">
